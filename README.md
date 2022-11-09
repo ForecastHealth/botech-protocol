@@ -66,7 +66,13 @@ Within the `globals` dictionary, `ledgers` provide information about how they ar
 
 Labels, if included, require a `label` (string). The label is a common-sense name for the thing that is being exchanged. For example, persons may be referred to as PAX, or Australian Dollars may be referred to as AUD etc. 
 
-Labels can take an additional property called `shape`. Typically, the unit of something being held is 1-dimensional. For example, if we are holding Australian Dollars, we are holding, for example, $200. Here, $200 is a scalar, or a 1-dimensional value. However, there are times when we want to specify an account with more than one dimension, or arbitrary numbers of dimensions. One particular example is with the propagation of people across nodes. Perhaps one node only requires 14-year old females (e.g. a vaccination programme). In this instance, we require two dimensions to the commodity*: one dimension to convey information about sex (male, female), and one dimension to convey information about age (0 -> 100, or similar).
+Labels can take an additional property called `shape`. 
+Almost always, the unit of something being held is 1-dimensional. 
+For example, AUD 200 is a scalar, or a 1-dimensional value. 
+However, there are times when we want to specify an account with more than one dimension. 
+One particular example is with people. 
+Perhaps one node only requires 14-year old females (e.g. a vaccination programme). 
+In this instance, we require two dimensions for the commodity*: one dimension to convey information about sex (male, female), and one dimension to convey information about age (0 -> 100, or similar).
 
 Note, commodity is clearly not the right word to refer to people. We use this nomenclature as it relates to accounting practices, wherein ledgers and accounts are used. 
 A `shape` is a list of integers, with each integer specifying the lenght of the dimension
