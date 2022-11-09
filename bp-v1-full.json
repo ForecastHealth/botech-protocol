@@ -7,7 +7,20 @@
     },
     "globals": {
 	"start": 0,
-	"stop": 999
+	"stop": 999,
+	"ledgers": [
+	    {
+		"label": "AUD",
+		"shape": [1]
+	    },
+	    {
+		"label": "PAX",
+		"shape": [2, 101]
+	    },
+	    {
+		"label": "Cardiologist Minutes"
+	    }
+	]
     },
     "nodes": [],
     "edges": []
