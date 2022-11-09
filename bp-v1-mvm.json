@@ -5,6 +5,6 @@
 	"botech protocol version": "1.0"
     },
     "globals": {},
-    "nodes": {},
-    "edges": {}
+    "nodes": [],
+    "edges": []
 }

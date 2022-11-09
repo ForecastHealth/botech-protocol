@@ -26,8 +26,8 @@ Therefore, the minimum viable model is as follows:
 	"botech protocol version": "1.0"
   },
   "globals": {},
-  "nodes": {},
-  "edges": {}
+  "nodes": [],
+  "edges": []
 }
 ```
 
