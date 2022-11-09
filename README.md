@@ -1,4 +1,4 @@
-# The "Botech Protocol"
+# The Botech Protocol
 | Parameter | Value      |
 |-----------|------------|
 | Started   | 2022-10-30 |
