@@ -10,7 +10,7 @@ However, in essence, the Botech protocol allows any model which requires transac
 
 # Minimum viable model
 The Botech protocol is a JSON file with four main keys: `nodes`, `edges`, `globals` and `metadata`.
-`nodes` contain accounts which store values of commodities.
+`nodes` contain ledgers which store values of commodities in accounts.
 `nodes` also contain properties, which provide data which can be used for additional calculations.
 `edges` connect nodes, with a source node, and a target node. 
 `edges` contain transaction data, about what quantity of commodities are transferred between nodes. 
@@ -52,6 +52,11 @@ An example is as follows:
 In this example, the model will represent it's start value as 2020, and its stop value as 2039.
 The botech model will not run in the year 2040, as it finished after 2039.
 An index will run from 0 to (2039 - 2020) 19, which is twenty units.
+
+## ledgers
+`ledgers` are dictionaries contained in the `globals` and `nodes` dictionaries.
+However, here we are speaking about their role in the `globals` dictionary.
+Within the `globals` dictionary, `ledgers` provide information about how they are implemented during initialisation of the model.
 
 # Nodes
 # Edges
