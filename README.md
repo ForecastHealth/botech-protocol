@@ -80,4 +80,13 @@ A `shape` is a list of integers, with each integer specifying the lenght of the 
 Note: If a `shape` is not given, it is implied the shape is [1].
 
 # Nodes
+```
+"nodes": [{},{},...]
+```
+`nodes` contains a list of dictionaries, where each dictionary represents the information for one node.
+Each node must contain at least a `label` (string), which is the name by which it will be identified. 
+```
+[{"label": "healthy persons"}]
+```
+
 # Edges
