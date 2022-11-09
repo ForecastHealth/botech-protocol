@@ -1,6 +1,8 @@
 # The "Botech Protocol"
-2022-10-30
-Written by Rory Watts, Director of Forecast Health Australia.
+| Parameter | Value      |
+|-----------|------------|
+| Started   | 2022-10-30 |
+| Authors   | Rory Watts |
 
 # Description
 The Botech Protocol is a protocol which describes rules for creating graph-based mathematical models.
