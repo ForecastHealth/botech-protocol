@@ -40,40 +40,37 @@ Globals specify parameters which are expected to be broadly important for the in
 That is, they are not specific to a particular node, or a particular edge.
 
 ## start and stop
-`start` specifies an integer. This integer represents the unit of time which is the first unit the botech model will run.
-
-`stop` specifies an integer. This integer represents the unit of time which is the last unit the botech model will run.
-
-It is required that stop > start. 
-Importantly, both start and stop are masks over an index, which runs from 0 to `stop` - `start`.
-An example is as follows:
 ```
 "start": 2020
 "stop": 2039
 ```
+`start` specifies an integer. This integer represents the unit of time which is the first unit the botech model will run.
+
+`stop` specifies an integer. This integer represents the unit of time which is the last unit the botech model will run.
+
+It is required that stop >= start. 
+Importantly, both start and stop are masks over an index, which runs from 0 to `stop` - `start`.
+An example is as follows:
 In this example, the model will represent it's start value as 2020, and its stop value as 2039.
 The botech model will not run in the year 2040, as it finished after 2039.
 An index will run from 0 to (2039 - 2020) 19, which is twenty units.
 
 ## ledgers
+```
+"label": "PAX"
+"shape": [2, 101]
+```
 `ledgers` are dictionaries contained in the `globals` and `nodes` dictionaries.
 However, here we are speaking about their role in the `globals` dictionary.
 Within the `globals` dictionary, `ledgers` provide information about how they are implemented during initialisation of the model.
 
-Labels, if included, require a `label`. The label is a common-sense name for the thing that is being exchanged. For example, persons may be referred to as PAX, or Australian Dollars may be referred to as AUD etc. 
-
-A `label` is a string
-```
-"label": "AUD"
-```
+Labels, if included, require a `label` (string). The label is a common-sense name for the thing that is being exchanged. For example, persons may be referred to as PAX, or Australian Dollars may be referred to as AUD etc. 
 
 Labels can take an additional property called `shape`. Typically, the unit of something being held is 1-dimensional. For example, if we are holding Australian Dollars, we are holding, for example, $200. Here, $200 is a scalar, or a 1-dimensional value. However, there are times when we want to specify an account with more than one dimension, or arbitrary numbers of dimensions. One particular example is with the propagation of people across nodes. Perhaps one node only requires 14-year old females (e.g. a vaccination programme). In this instance, we require two dimensions to the commodity*: one dimension to convey information about sex (male, female), and one dimension to convey information about age (0 -> 100, or similar).
 
 Note, commodity is clearly not the right word to refer to people. We use this nomenclature as it relates to accounting practices, wherein ledgers and accounts are used. 
 A `shape` is a list of integers, with each integer specifying the lenght of the dimension
-```
-"shape": [2, 101]
-```
+
 Note: If a `shape` is not given, it is implied the shape is [1].
 
 # Nodes
