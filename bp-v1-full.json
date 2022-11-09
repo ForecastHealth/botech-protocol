@@ -1,0 +1,11 @@
+{
+    "metadata": {
+	"authors": ["Rory Watts"],
+	"title": "Botech Protocol Version 1.0 - Full Implementation",
+	"botech protocol version": "1.0",
+	"description": "A complete implementation of BPv1.0. Exected to contain the complete feature set. Expected to pass all tests on Botech utilities."
+    },
+    "globals": {},
+    "nodes": {},
+    "edges": {}
+}

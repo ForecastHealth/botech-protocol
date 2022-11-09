@@ -15,13 +15,13 @@ The Botech protocol is a JSON file with four main keys: `nodes`, `edges`, `globa
 `edges` connect nodes, with a source node, and a target node. 
 `edges` contain transaction data, about what quantity of commodities are transferred between nodes. 
 `globals` contain information relevant to the initialisation and runtime of the model, such as the duration of a run, and the specifics of the accounts.
-`metadata` contains an author, a title of the model, and the version of the Botech protocol it was built in accordance with.
+`metadata` contains, at least, a list of authors, a title of the model, and the version of the Botech protocol it was built in accordance with.
 
 Therefore, the minimum viable model is as follows:
 ```
 {
   "metadata": {
-    "author": "",
+    "authors": [],
 	"title": "",
 	"botech protocol version": "1.0"
   },
