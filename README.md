@@ -33,6 +33,25 @@ Therefore, the minimum viable model is as follows:
 
 As this is the minimum viable model, anything less than this is expected to return an error.
 
+# Globals
+Globals specify parameters which are expected to be broadly important for the initialisation and runtime.
+That is, they are not specific to a particular node, or a particular edge.
+
+## start and stop
+`start` specifies an integer. This integer represents the unit of time which is the first unit the botech model will run.
+
+`stop` specifies an integer. This integer represents the unit of time which is the last unit the botech model will run.
+
+It is required that stop > start. 
+Importantly, both start and stop are masks over an index, which runs from 0 to `stop` - `start`.
+An example is as follows:
+```
+"start": 2020
+"stop": 2039
+```
+In this example, the model will represent it's start value as 2020, and its stop value as 2039.
+The botech model will not run in the year 2040, as it finished after 2039.
+An index will run from 0 to (2039 - 2020) 19, which is twenty units.
+
 # Nodes
 # Edges
-# Globals
