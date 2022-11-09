@@ -71,7 +71,7 @@ Almost always, the unit of something being held is 1-dimensional.
 For example, AUD 200 is a scalar, or a 1-dimensional value. 
 However, there are times when we want to specify an account with more than one dimension. 
 One particular example is with people. 
-Perhaps one node only requires 14-year old females (e.g. a vaccination programme). 
+Perhaps one node only requires 14-year old females (e.g. a vaccination programme), but takes information from a node containing information about all persons, young and old. 
 In this instance, we require two dimensions for the commodity*: one dimension to convey information about sex (male, female), and one dimension to convey information about age (0 -> 100, or similar).
 
 Note, commodity is clearly not the right word to refer to people. We use this nomenclature as it relates to accounting practices, wherein ledgers and accounts are used. 
