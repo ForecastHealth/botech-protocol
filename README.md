@@ -25,15 +25,14 @@ Understandable models mean that different groups can assess and use models.
 Reproducibility means that assumptions are transparent, and that groups can adapt and rebuild models.
 
 
-## Usage
-How to implement or use the protocol in various scenarios.
-
 ## Protocol Specification
 - Architecture: Details of the protocol's structure and components.
 - Data Format: Description of data structures, encoding, etc.
 - Communication: Explanation of how data is transmitted and received.
 
 ## Implementations
+### Python
+`botech-python` is currently being developed by Forecast Health Australia.
 
 ## Examples
 Practical examples or use cases.
@@ -55,3 +54,5 @@ The full text of the Apache License 2.0 or a summary with a link to the full lic
 ## Acknowledgments
 We acknowledge the great contributions and support made by the World Health Organization. In particular we acknowledge the contributions made by Dr Andre Ilbawi, Dr Filip Meheus, Dr Melanie Bertram, Dr Slim Slama and Dr Tessa Edejer.
 We acknowledge contributions made by Annalisa Belloni of Cancer Research UK.
+We acknowledge contributions from Mr Joseph Dunne, and Mr Timothy Knowles, who have both contributed to the `botech-python` implementation, as well as other related projects.
+We acknowledge Mr Angus Watkins, for the design of the Botech logo.
