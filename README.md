@@ -50,15 +50,17 @@ A typical configuration file will consist of the following:
   "nodes": [],
   "links": [],
   "runtime": {},
-  "metadata": {}
+  "metadata": {},
+  "subloops": []
 }
 ```
 NOTE - `links` are synonymous with `edges` here.
 
-`nodes` is a list of nodes. 
-`links` is a list of links.
+`nodes` is a list of dictionaries representing nodes. 
+`links` is a list of dictionaries representing links.
 `runtime` is optional, and is a dictionary of runtime variables.
 `metadata` is optional, and is a dictionary of key value pairs to be considered metadata.
+`subloops` is optional, and is a list of dictionaries representing subloop configurations.
 
 ### Nodes and Links
 Nodes and links are a collection of properties which forms the model structure. 
@@ -83,18 +85,58 @@ Links can generate arrays to create their `transition rate`.
 This property is a dictionary with the following features:
 - `method`: a string which matches the name of the method to generate the array
 - `parameters`: a dictionary containing key value pairs of the parameters required to generate the array
-- 
+- `data_fetcher_label`: [optional] a string representing the label of the attached `datafetcher` [see below]
+- `cache`: [optional] a boolean. True if the original value should be cached (useful for intensive requests e.g. from `datafetcher`s)
+- `fetch`: [optional] instructions on when in the runtime to fetch the array (coming soon)
+
+#### Flush [nodes only, optional]
+A boolean representing whether, at the the end of each timepoint (e.g. one year), the balance of the nodes should be reset to 0s ([[0, 0, 0...], [...0]]).
+This can be useful if the node is not a state, but a collection or constant of some sort.
+
+#### Age [nodes only, optional]
+A boolean representing whether, when triggered, the balance of the nodes should be "aged".
+Here, this means the values of each element in an array are shifted by 1 index.
+Therefore, the first array will contain 0, and the final array will be removed.
+This simulated ageing: males aged 1 will now be aged 2, females aged 50 will now be aged 51 etc.
+This also implies anyone aged 100 will be removed from the array.
 
 ### Runtime
+#### start and end [optional]
+start: An integer indicating the index at which a model should start e.g. 2023
+end: An integer indicating the index at which a model should end (inclusive of that year) e.g. 2030
+This is optional, and defaults to 0 and 1 respectively.
+
+Using the above example:
+A model with this specification should have eight timepoints: 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030
+
+Note - the specification of a timepoint is arbitrary.
 
 ### Metadata
+A series of key value pairs containing strings that can be used to hold metadata about the model.
+For example:
+```
+{
+  "metadata": {
+    "author": "Botech",
+    "title": "Metadata Example",
+    "description": "An example metadata dictionary",
+    "year": "2023"
+  }
+}
+```
 
+
+### Subloops
 
 ## Specification: The Botech Runtime Environment
 
 ## Specification: The Botech Implementation
 
 ## Specification: The Observation File
+
+## Additional Features: Triggers
+
+## Additional Features: Surrogates
 
 ## Attaching Models to External Data Sources
 
