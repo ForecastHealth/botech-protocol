@@ -13,13 +13,14 @@ Furthermore, a node's balance is an **array** of 202 values, from males aged 0, 
 Botech is a superset of the functionality of traditional state-transition models.
 That is, it contains all the expected behaviour of state-transition models, and adds features to them.
 Botech itself is not a piece of software, but has implementations.
-Botech is loosely designed around the unix philosophy of doing one thing well.
 
+Botech is loosely designed around the unix philosophy of doing one thing well.
 The implementation takes a `model configuration file` and produces an `observation file` based on simulating that model.
 Therefore, an implementation requires:
 - Code to interpret the model file, and create the runtime environment
 - Code to simulate the model and its behaviours
 - Code to log and export the observations
+
 Botech *should be shareable*, and so both the model configuration file and observation file are intended to be plain text (e.g. a JSON configuration and a CSV of observations).
 
 ## Background
@@ -29,7 +30,7 @@ The Botech protocol arose from the need to do the following things:
 - which are reproducible
 
 Complex models mean complex behaviours can be captured (e.g. feedback loops, dynamic changes to the model).
-Understandable models mean that different groups can assess and use models.
+Understandable models mean that different groups can assess and interpret models without programming expertise.
 Reproducibility means that assumptions are transparent, and that groups can adapt and rebuild models.
 We also wanted the protocol and implementation to be open-source. Intelligence is distributed, and good modelling requires a mix of good software, good topic-experts, and good designers.
 Making botech open-source means that we can leverage this distributed intelligence.
@@ -57,13 +58,12 @@ A typical configuration file will consist of the following:
   "subloops": []
 }
 ```
-NOTE - `links` are synonymous with `edges` here.
 
-`nodes` is a list of dictionaries representing nodes. 
-`links` is a list of dictionaries representing links.
-`runtime` is optional, and is a dictionary of runtime variables.
-`metadata` is optional, and is a dictionary of key value pairs to be considered metadata.
-`subloops` is optional, and is a list of dictionaries representing subloop configurations.
+`nodes` is a list of dictionaries representing nodes.  
+`links` is a list of dictionaries representing links.  
+`runtime` is optional, and is a dictionary of runtime variables.  
+`metadata` is optional, and is a dictionary of key value pairs to be considered metadata.  
+`subloops` is optional, and is a list of dictionaries representing subloop configurations.  
 
 ### Nodes and Links
 Nodes and links are a collection of properties which forms the model structure. 
