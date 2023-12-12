@@ -31,6 +31,8 @@ The Botech protocol arose from the need to do the following things:
 Complex models mean complex behaviours can be captured (e.g. feedback loops, dynamic changes to the model).
 Understandable models mean that different groups can assess and use models.
 Reproducibility means that assumptions are transparent, and that groups can adapt and rebuild models.
+We also wanted the protocol and implementation to be open-source. Intelligence is distributed, and good modelling requires a mix of good software, good topic-experts, and good designers.
+Making botech open-source means that we can leverage this distributed intelligence.
 
 
 ## Clarifications
@@ -109,6 +111,10 @@ These are the ID of the source node, and the ID of the target node respectively.
 #### Description [optional]
 Components may have a plain text description, which informs users about the purpose of the element.
 
+#### Subtype [optional]
+If specified, may change the behaviour of the node or edge. 
+For example, the `surrogate` subtype of nodes provides different behaviours (discussed below).
+
 #### Generate Array [optional]
 Nodes can generate arrays to store in their `balance`. 
 Links can generate arrays to create their `transition rate`.
@@ -183,18 +189,105 @@ subloops = [
 `narration` is a string which will be written to the `observation file` for each `Event` that occurs during the subloop.
 This is useful to distinguish between subloops when debugging or reading logs.
 `all_nodes` is a boolean which, if True, will attempt to run the `method` on every node, regardless of whether or not it has an `order`.
+`nodes_to_include` is a list of IDs of nodes to apply the `method` to. 
+`nodes_to_exclude` is a list of IDs of nodes to avoid applying the `method` to.
 
 ## Specification: The Botech Runtime Environment
+The goal of the Runtime Environment (hereafter `environment`) is to instantiate the set of methods and data sources required for the model to be appropriately simulated. Importantly, once the environment is correctly set up, it can run the `simulate` method and produce the `observation file`.
 
-## Specification: The Botech Implementation
+The environment takes the following data structures.
 
-## Specification: The Observation File
+### Model configuration
+The model configuration is discussed above (the plain text configuration file for models).
 
-## Additional Features: Triggers
+The environment accepts one model configuration and creates a Botech Graph, which is discussed below.
 
-## Additional Features: Surrogates
+### DataFetchers and DataSources
 
-## Attaching Models to External Data Sources
+Discussed elsewhere. Briefly, datafetchers and datasources are ways of generating data, either synthetically, or through datasources. For example, we may want to generate a random value as a transition rate, and we could create a datafetcher to provide this method. Another example, we may wish to obtain the age-specific fertility rates for Uganda for 2020, and we would use a datafetcher as an API on this specific datasource.
+
+### Hooks
+
+Discussed elsewhere. Briefly, hooks allow the user to add functionality to a node which isn't currently available through a separate API, or would be confusing to add directly to the graph.
+
+An example of this is "disability", which means (the sum of the values in a node, multiplied against a disability weight). This can be achieved through a node and link, or it may be added as a hook, in which users can specify the weight, and how it should be used.
+
+
+## Specification: The Botech Graph and Graph Components
+
+The `environment`, when passed a model configuration, will create a `graph` and the components of the graph: `nodes` and `edges`. This is the process of translating the nodes and links of the `configuration` into objects (or methods, depending on the implementation) that can:
+- maintain state
+- adjust their balance (nodes)
+- transmit values (edges)
+- generate arrays (nodes and edges)
+
+
+## Specification: The Simulation Method and Runtime Events
+
+The `simulate` method is triggered from the `environment` and propagated to the `graph`, where the the model is simulated. Here is an example from the `botech-python` implementation.
+```
+def _simulation_loop(self):
+    while not self._environment.counter_is_max():
+
+        for subloop in self._subloops:
+
+            nodes_to_include = self.determine_nodes_to_include(subloop)
+            method_name = subloop.get("method")
+            narration = subloop.get("narration", "")
+            parameters = subloop.get("parameters", {})
+
+            self._environment.set_simulation_narration(narration)
+            for node in nodes_to_include:
+                method = getattr(node, method_name)
+                method(**parameters)
+
+        self._environment.increment_counter()
+        self._environment.reset_local_event_counter()
+```
+Here are the important points about the `simulation` method:
+- It runs from the start time to the end time (including the end time)
+- It iterates through the subloops which were configured in the `model configuration`
+- It determines which nodes should be included
+- It fetches the appropriate method, based on the method specified in the subloop label
+- It performs that method on each node
+
+## Specification: Events and the Observation File
+Botech produces observations about the simulation. 
+This is different to producing `results` as results are typically a curation of observations.
+Observations are taken anytime anything *happens*, which means we can understand exactly what a model is doing.
+
+Something *happens* in the model when:
+- The balance of a `node` changes
+- An array is generated, calculated, or retrieved from a cache
+- values are moved in a link
+
+When these things happen, we call it an `event`, and we record it.
+The record has the following features (although we plan to make this configurable in the future):
+- id: a unique identifier
+- timestamp: a mock-timestamp to provide time-series functionality
+- time index: an integer, 0-indexed (the first time is time 0)
+- time reference: an integer
+- event number: an integer starting at 0, incrementing for each event
+- local number: an integer starting at 0 for each time period
+- narration: the `subloop` narration
+- event type: a string representing the type of event (e.g. "balance change")
+- component type: a string indicating a node or edge
+- component id: the unique identifier of the component
+- component label: the string label of the component
+- component subtype: the subtype of the component
+- value: Union[float, np.ndarray]
+
+## Additional Features
+
+### On-Graph Calculations 
+
+### Triggers
+
+### Surrogates (Nodes which are edges)
+
+## Attaching Models to External Data Sources (Datafetchers and DataSources)
+
+## Providing added behaviours through Hooks
 
 ## Implementations
 ### Python
