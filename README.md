@@ -208,10 +208,7 @@ Discussed elsewhere. Briefly, datafetchers and datasources are ways of generatin
 
 ### Hooks
 
-Discussed elsewhere. Briefly, hooks allow the user to add functionality to a node which isn't currently available through a separate API, or would be confusing to add directly to the graph.
-
-An example of this is "disability", which means (the sum of the values in a node, multiplied against a disability weight). This can be achieved through a node and link, or it may be added as a hook, in which users can specify the weight, and how it should be used.
-
+Discussed elsewhere. 
 
 ## Specification: The Botech Graph and Graph Components
 
@@ -275,19 +272,72 @@ The record has the following features (although we plan to make this configurabl
 - component id: the unique identifier of the component
 - component label: the string label of the component
 - component subtype: the subtype of the component
-- value: Union[float, np.ndarray]
+- value: the value calculated with the event type
 
 ## Additional Features
+In the overview, we mentioned that botech is a superset of traditional state-transition models. By this, we mean *state-transition models pass values between states, and our models can do more than this*. The following features are considered additional to that traditional functionality.
 
 ### On-Graph Calculations 
+Rather than pass values between states, edges can use the value of a source node to inform them about how to interact with a target node.
 
-### Triggers
+Consider the following example: two nodes, `foo` and `bar`, connected by edge `foo -> bar`. `foo` has value 0.5, `bar` has value 10, `foo -> bar` has transition rate 1.
+
+In a traditional setting, `foo` should transfer 100% of its value to `bar`, resulting in the final balances: `foo` (0), `bar` (10.5).
+
+However, during configuration, we can tell `foo -> bar` to adopt the following behaviour:
+- Don't take any values from `foo`
+- Use `foo`'s value as information
+- Use that information to multiply `bar`'s value
+
+This means that the value of 0.5 from `foo` is multiplied against `bar`'s value of 10, resulting in the final balances: `foo` (0.5), `bar` (5).
+
+This means users can perform *on-graph calculations*, which can be useful to make calculations explicit, rather than occurring before the model has been created. It also means users can model dynamic processes that modify eachother.
 
 ### Surrogates (Nodes which are edges)
+Surrogates defined very simply are *nodes which change the transition rates around them*. This can be unintuitive, and let us provide some context first. 
+
+Imagine the following graph with nodes `foo`, `bar` and edge `foo -> bar`. `foo` has value 10, `bar` has value `5`. `foo -> bar` has the crypic value of 0.1234598798, some complicated number, and it is not immediately clear where this value came from. It turns out, that 0.1234598798 is the resulting value from a series of calculations made in an excel spreadsheet which, the whereabouts of which have gone missing. Now we are left with a value, and not much explanation of what it means! 
+
+This example highlights what `surrogate` nodes intend to resolve: **Transition rates can represent a simplification of a complex process.**
+
+One solution to this is to utilise the on-graph calculations we explained previously. However, we are presented with the issue that `values` are a property of nodes, and these values are transmitted through edges by rates. Surrogates allow us to pretend a node is an edge, by affecting the edge coming into it, and the edge going out of it.
+
+Here's an example.
+
+Consider the following graph: `foo -> bar -> baz`, and assume that `foo` has a value of 10. `bar` is a surrogate, so it means we want `bar` to pretend to be a transition rate. Here's how it works: when the value of `bar` changes:
+- the value of `foo -> bar` is set to the value of `bar`
+- the value of `bar -> baz` is set to 1. 
+So, if we wanted a graph where 50% of values move between `foo` to `baz`, we would set the value of `bar` to 0.5 and the following would happen:
+- the value of `foo -> bar` would be set to 0.5
+- the value of `bar -> baz` would be set to 1
+- 50% of people would move from `foo` and immediately pushed to `bar -> baz`, where 100% of them would move to `baz`.
+
+This is clearly a complicated process, but it allows users to build progressively complex models, by slowly expanding processes by unpacking transition rates into their component calculations. This also (perhaps surprisingly) provides transparency, because users can see what a transition rate is composed of. For example, the transition between `foo` and `bar` might be to do with the coverage rate, and the population in need, which would have been obscured if the transition rate was one value.
+
+
+### Triggers
+Triggers work as follows: *when something happens, if a condition is met, another thing happens*. 
+
+Consider the following graph: `foo -> bar -> baz` where `foo` has value 10, and transmits a flat value of 1 to `bar` each year. `bar -> baz` has a `trigger` which says "every 3 values of `bar`, increment `baz` by 1, but dont remove values from `bar`". Therefore, the following will happen:
+- foo (10), bar (0), baz (0)
+- foo (9), bar (1), baz (0)
+- foo (8), bar (2), baz (0)
+- foo (7), bar (3), baz (1)
+- foo (6), bar (4), baz (1)
+- foo (5), bar (5), baz (1)
+- foo (4), bar (6), baz (2)
+- foo (3), bar (7), baz (2)
+- ...
+
+This can be used to create complex behaviours, or simplify behaviours. For example, if each new value going in to `breast cancer treatment` should incur a set of resources and costs, we could attach these resources and costs as nodes that are `triggered` when there this occurs.
+
 
 ## Attaching Models to External Data Sources (Datafetchers and DataSources)
 
 ## Providing added behaviours through Hooks
+Hooks allow the user to add functionality to a node which isn't currently available through a separate API, or would be confusing to add directly to the graph.
+
+An example of this is "disability", which means (the sum of the values in a node, multiplied against a disability weight). This can be achieved through a node and link, or it may be added as a hook, in which users can specify the weight, and how it should be used.
 
 ## Implementations
 ### Python
