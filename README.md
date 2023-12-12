@@ -15,7 +15,15 @@ Therefore, an implementation requires:
 Botech *should be shareable*, and so both the model configuration file and observation file are intended to be plain text (e.g. a JSON configuration and a CSV of observations).
 
 ## Background
-Context or history behind the protocol's development.
+The Botech protocol arose from the need to do the following things:
+- Produce complex models...
+- that people understand...
+- which are reproducible
+
+Complex models mean complex behaviours can be captured (e.g. feedback loops, dynamic changes to the model).
+Understandable models mean that different groups can assess and use models.
+Reproducibility means that assumptions are transparent, and that groups can adapt and rebuild models.
+
 
 ## Usage
 How to implement or use the protocol in various scenarios.
