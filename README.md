@@ -34,6 +34,7 @@ Reproducibility means that assumptions are transparent, and that groups can adap
 
 
 ## Clarifications
+- The protocol is under development. It is primarily under development through trial and error via the `botech-python` implementation.
 - We use `edges` and `links` interchangeably in this document
 - When referring to programming conventions, we are typically using Python naming conventions e.g. dictionaries for `{}` and lists for `[]`
 
@@ -71,6 +72,35 @@ Components have an ID. An ID should be unique. We choose to use `ULID`.
 
 #### Label [nodes only, required]
 Nodes have a plain-text, human-readable label.
+
+#### Order [optional]
+An integer.
+
+Order for nodes specifies the runtime order.
+E.g. if `foo`, `bar` and `baz` have orders 0, 2, and 1, then for any `subloop` where they are all invoked, they will run in order `foo`, `baz`, `bar`.
+More than one node can have the same order, and this is useful if there is no meaningful difference when two nodes run.
+
+Order for links specifies their `batch` order.
+Batch order is best illustrated through an example.
+Consider a node with balance 10 called `foo`, it has two links, to `bar` and to `baz` (`foo -> bar`, `foo -> baz`).
+Both `foo -> bar` and `foo -> baz` have transition rates of 0.5, meaning they will take 50% of `foo`'s balance.
+
+In the first scenario, `foo -> bar` has order 0, and `foo -> baz` has order 1. This means:
+- `foo` will transmit 50% of its balance to `bar` (5)
+- `foo` subtracts 5 from its balance
+- `foo` will then transmit 50% of its remaining balance to `baz` (2.5)
+- `foo` subtracts 2.5 from its balance
+- the balance in `foo` is 2.5, the balance in `bar` is 5, and the balance in `baz` is 2.5
+
+In the second scenario, `foo -> bar` and `foo -> baz` have order 0. This means:
+- `foo` keeps track of its balance before it transmits anything
+- `foo` will transmit 50% of that balance to `bar` (5)
+- `foo` will transmit to% of that balance to `baz` (5)
+- `foo` subtracts that balance from itself
+- the balance in `foo` is 0, the balance in `bar` is 5, and the balance in `baz` is 5
+
+Therefore, batches for links are more complicated, but important to understand. One is more suitable if a user is thinking about rates. One is more suitable if a user is trying to divide a node in the traditional sense.
+
 
 #### Source and Target [links only, required]
 Links require two properties: `source` and `target`.
@@ -127,6 +157,32 @@ For example:
 
 
 ### Subloops
+The order of operations in a model is important.
+Subloops allow users to specify when things happen within runtime.
+For example, each year you may wish for ageing to occur first, then births, then deaths etc.
+These are behaviours which can be ordered using subloops.
+
+Subloops are a list of dictionaries, with each dictionary providing information about the behaviour to occur. 
+Importantly, the list will run from top to bottom, so the order matters.
+
+The properties of subloops are as follows
+```
+subloops = [
+  {
+    "method": "age",
+    "narration": "Age the population",
+    "all_nodes": False,
+    "parameters": {
+      "nodes_to_include": [],
+      "nodes_to_exclude": []
+    }
+  }
+]
+```
+`method` is a string, corresponding to a property or method that a node can execute e.g. "age", "flush", "generate_balance".
+`narration` is a string which will be written to the `observation file` for each `Event` that occurs during the subloop.
+This is useful to distinguish between subloops when debugging or reading logs.
+`all_nodes` is a boolean which, if True, will attempt to run the `method` on every node, regardless of whether or not it has an `order`.
 
 ## Specification: The Botech Runtime Environment
 
