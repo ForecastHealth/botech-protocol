@@ -207,8 +207,10 @@ The environment accepts one model configuration and creates a Botech Graph, whic
 Discussed elsewhere. Briefly, datafetchers and datasources are ways of generating data, either synthetically, or through datasources. For example, we may want to generate a random value as a transition rate, and we could create a datafetcher to provide this method. Another example, we may wish to obtain the age-specific fertility rates for Uganda for 2020, and we would use a datafetcher as an API on this specific datasource.
 
 ### Hooks
-
 Discussed elsewhere. 
+
+### Observations
+A user can attach the `observation file` to the environment (discussed below).
 
 ## Specification: The Botech Graph and Graph Components
 
@@ -332,7 +334,84 @@ Consider the following graph: `foo -> bar -> baz` where `foo` has value 10, and 
 This can be used to create complex behaviours, or simplify behaviours. For example, if each new value going in to `breast cancer treatment` should incur a set of resources and costs, we could attach these resources and costs as nodes that are `triggered` when there this occurs.
 
 
-## Attaching Models to External Data Sources (Datafetchers and DataSources)
+## Getting Data (Datafetchers and DataSources)
+By default, data is not "input" into nodes as balances, or into edges as transition rates. 
+Rather, data is returned from a `datafetcher`.
+A datafetcher is an API, which accepts a `method` and some `parameters` relating to that method and returns a value in the form of an 2x101 array.
+Datafetchers are also able to retrieve information from the `environment` such as the current time period, and metadata.
+Importantly, datafetchers are meant to be expanded and customised.
+Users are expected to register methods with a datafetcher, and then register the `datafetcher` to the `environment`.
+
+Consider the following node in a hypothetical `model configuration file`:
+```
+{
+   "id": "foo",
+   "label": "foo",
+   "generate_array": {
+    "data_fetcher_label": "single_value_generator",
+    "method": "generate_a_single_value",
+    "parameters": {
+      "value": 10
+    }
+   }
+}
+```
+Here, the configuration requires that the `environment` has a `datafetcher` and that the `datafetcher` has been registered as "single_value_generator".
+Within the `datafetcher` is should have a method, as follows (or similar):
+```
+def generate_a_single_value(value: int) -> np.ndarray:
+    return np.ones((2, 101)) * value
+```
+Here, the method is defined as returning an array with shape 2x101, with the value that was provided.
+
+This is a simple method, but a necessary one. However, it demonstrates that users can create arbitrary and complicated methods to generate synthetic data, such as:
+- picking random values
+- generating distributions
+- changing values over time
+- etc...
+
+So far, we've talked about generating synthetic data, but `datafetchers` are also used for retrieving stored data too.
+Here is another hypothetical node.
+```
+{
+   "id": "foo",
+   "label": "foo",
+   "generate_array": {
+    "data_fetcher_label": "undp_wpp",
+    "method": "get_the_population_for_a_country_in_a_particular_year",
+    "parameters": {
+      "country": "UGA"
+    }
+   }
+}
+```
+This method would obviously be a little more complicated, but would look something like this:
+```
+def get_the_population_for_a_country_in_a_particular_year(self, country: str) -> np.ndarray:
+    current_year = self.get_the_current_year()
+    values = self.retrieve_undp_population(self.conn, current_year, country)
+    return values
+```
+This code is intentionally sloppy to make two things obvious:
+- you can retrieve information from the `environment`
+- `datafetchers` often have some kind of connection to a `datasource`, as indicated by `self.conn()`
+
+Although not strictly necessary, `datasources` are useful because they allow users to separate the API to obtain data, and the connection to that data.
+This can be useful if two groups access the data differently e.g. on a local network, or via a web-API.
+
+Finally, an `environment` can handle an arbitrary number of `datafetchers`.
+This means that users can maintain datasets whichever way they like. 
+
+## Using the observations as a datasource
+One of the requirements of botech, was that it was replicable, so that users could share models.
+Using `datafetchers` and `datasources` this is indeed possible, but potentially very cumbersome.
+If one group has 10 datasources, they would need to allow users to access these, either online (e.g. via an API) or by sending local copies to each user.
+To address this, botech allows users to attach an `observation file` to the `environment`.
+If this is done, instead of accessing `datafetchers` to obtain data, the environment will access data from the `observation file`.
+This means that users don't have to share their databases, just their results, and other users will be able to completely replicate the model.
+This also means that users can change the assumptions in that file, re-run the model, and observe the changes.
+This has one important restriction - the runtime order has to be identical.
+
 
 ## Providing added behaviours through Hooks
 Hooks allow the user to add functionality to a node which isn't currently available through a separate API, or would be confusing to add directly to the graph.
@@ -343,22 +422,21 @@ An example of this is "disability", which means (the sum of the values in a node
 ### Python
 `botech-python` is currently being developed by Forecast Health Australia.
 
-## Examples
-Practical examples or use cases.
-
-## Security Considerations
-Any security-related information or best practices.
-
 ## Contributing
-Guidelines for contributing to the protocol's development.
-
-## FAQs
-Answers to common questions.
+If you would like to contribute to the development of botech, please email info@forecasthealth.org
 
 ##  License
-The full text of the Apache License 2.0 or a summary with a link to the full license.
+Botech and its implementations are licensed under the Apache 2.0 license [A copy can be found here](https://github.com/ForecastHealth/botech-protocol/blob/master/LICENSE)
 
 ## Similar Projects
+There are other excellent efforts for creating and simulating health models:
+- [The OneHealth Tool (OHT) and Integrated Health Tool (IHT)](https://www.avenirhealth.org/)
+- [The C4P Implementation by Levin Morgan LLC](https://www.levinmorgan.com/publications)
+- [The TLO Model from the Thanzi La Onse collaboration](https://www.tlomodel.org/)
+- [Vivarium by IHME](https://github.com/ihmeuw/vivarium)
+- [TreeAge Software](https://www.treeage.com/)
+- [The Policy1 Modelling Platform](https://www.policy1.org/)
+- [The Optima Model](https://optimamodel.com/)
 
 ## Acknowledgments
 We acknowledge the great contributions and support made by the World Health Organization. In particular we acknowledge the contributions made by Dr Andre Ilbawi, Dr Filip Meheus, Dr Melanie Bertram, Dr Slim Slama and Dr Tessa Edejer.
