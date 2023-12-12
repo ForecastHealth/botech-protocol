@@ -2,7 +2,17 @@
 Authors: Rory Watts, Director, Forecast Health Australia
 
 ## Overview
-Brief description of the protocol, its purpose, and scope.
+Botech (back of the envelope technology), is a protocol for the creation and simulation of state transition models.
+Fundamentally, **all components of the model are nodes or edges**: people, resources, costs, constants, these should all be represented as nodes, or edges.
+Botech is a superset of the functionality of traditional state-transition models, and can generate complex behaviours from a relatively simple set of rules.
+Botech itself is not a piece of software, but has implementations.
+Botech is loosely designed around the unix philosophy of doing one thing well.
+The implementation takes a `model configuration file` and produces an `observation file` based on simulating that model.
+Therefore, an implementation requires:
+- Code to interpret the model file, and create the runtime environment
+- Code to simulate the model and its behaviours
+- Code to log and export the observations
+Botech *should be shareable*, and so both the model configuration file and observation file are intended to be plain text (e.g. a JSON configuration and a CSV of observations).
 
 ## Background
 Context or history behind the protocol's development.
