@@ -434,6 +434,7 @@ There are other excellent efforts for creating and simulating health models:
 - [The C4P Implementation by Levin Morgan LLC](https://www.levinmorgan.com/publications)
 - [The TLO Model from the Thanzi La Onse collaboration](https://www.tlomodel.org/)
 - [Vivarium by IHME](https://github.com/ihmeuw/vivarium)
+- [Squiggle](https://github.com/quantified-uncertainty/squiggle)
 - [TreeAge Software](https://www.treeage.com/)
 - [The Policy1 Modelling Platform](https://www.policy1.org/)
 - [The Optima Model](https://optimamodel.com/)
