@@ -2,19 +2,17 @@
 Authors: Rory Watts, Director, Forecast Health Australia
 
 ## Overview
-Botech (back of the envelope technology), is a protocol for the creation and simulation of state transition models.
-State transition models are composed of nodes and edges. 
-Nodes store values as a `balance`, edges transmit values using a `transition rate`.
-Edges have a direction. 
-Therefore, the representation of these models is a `DiGraph` or `Directional Graph`.
-Fundamentally, **all components of the model are nodes or edges**: people, resources, costs, constants, these should all be represented as nodes, or edges.
-Furthermore, a node's balance is an **array** of 202 values, from males aged 0, to females aged 100.
+Botech (back of the envelope technology), is a protocol for the simulation of state transition models.
+The protocol dictates how models can be created, and how they can be run.
+State transition models are composed of nodes and links. 
+Nodes store values as a `balance`, links transmit values using a `transition rate`.
+Both a balance and a rate is an array of 202 elements, which represents populations of Males aged 0, to Females aged 100.
+Links have a direction from a source to a target, therefore, the representation of these models is a `DiGraph` or `Directional Graph`.
+Fundamentally, **all components of the model are nodes or links**: people, resources, costs, constants, these should all be represented as nodes, or edges.
 
 Botech is a superset of the functionality of traditional state-transition models.
 That is, it contains all the expected behaviour of state-transition models, and adds features to them.
 Botech itself is not a piece of software, but has implementations.
-
-Botech is loosely designed around the unix philosophy of doing one thing well.
 The implementation takes a `model configuration file` and produces an `observation file` based on simulating that model.
 Therefore, an implementation requires:
 - Code to interpret the model file, and create the runtime environment
@@ -25,8 +23,8 @@ Botech *should be shareable*, and so both the model configuration file and obser
 
 ## Background
 The Botech protocol arose from the need to do the following things:
-- Produce complex models...
-- that people understand...
+- Produce complex models,
+- that people understand,
 - which are reproducible
 
 Complex models mean complex behaviours can be captured (e.g. feedback loops, dynamic changes to the model).
@@ -38,7 +36,7 @@ Making botech open-source means that we can leverage this distributed intelligen
 
 ## Clarifications
 - The protocol is under development. It is primarily under development through trial and error via the `botech-python` implementation.
-- We use `edges` and `links` interchangeably in this document
+- We use `links` in this document, but they can be thought of as `edges` or `vertices`
 - When referring to programming conventions, we are typically using Python naming conventions e.g. dictionaries for `{}` and lists for `[]`
 
 
@@ -55,7 +53,7 @@ A typical configuration file will consist of the following:
   "links": [],
   "runtime": {},
   "metadata": {},
-  "subloops": []
+  "subroutines": []
 }
 ```
 
@@ -63,48 +61,56 @@ A typical configuration file will consist of the following:
 `links` is a list of dictionaries representing links.  
 `runtime` is optional, and is a dictionary of runtime variables.  
 `metadata` is optional, and is a dictionary of key value pairs to be considered metadata.  
-`subloops` is optional, and is a list of dictionaries representing subloop configurations.  
+`subroutines` is optional, and is a list of dictionaries representing subloop configurations.  
 
-### Nodes and Links
+### Node Properties
 Nodes and links are a collection of properties which forms the model structure. 
 For our purposes, we will deal with nodes and links collectively when we can, and call them `components`.
 
 #### ID [required]
 Components have an ID. An ID should be unique. We choose to use `ULID`. 
 
-#### Label [nodes only, required]
+#### Label [optional]
 Nodes have a plain-text, human-readable label.
 
-#### Order [optional]
-An integer.
+#### Description [optional]
+Components may have a plain text description, which informs users about the purpose of the element.
 
-Order for nodes specifies the runtime order.
-E.g. if `foo`, `bar` and `baz` have orders 0, 2, and 1, then for any `subloop` where they are all invoked, they will run in order `foo`, `baz`, `bar`.
-More than one node can have the same order, and this is useful if there is no meaningful difference when two nodes run.
+#### Subtype [optional]
+If specified, may change the behaviour of the node or edge. 
+For example, the `surrogate` subtype of nodes provides different behaviours (discussed below).
 
-Order for links specifies their `batch` order.
-Batch order is best illustrated through an example.
-Consider a node with balance 10 called `foo`, it has two links, to `bar` and to `baz` (`foo -> bar`, `foo -> baz`).
-Both `foo -> bar` and `foo -> baz` have transition rates of 0.5, meaning they will take 50% of `foo`'s balance.
+#### Generate Array [optional]
+Nodes can generate arrays to store in their `balance`. 
+This property is a dictionary with the following features:
+- `method`: a string which matches the name of the method to generate the array
+- `parameters`: a dictionary containing key value pairs of the parameters required to generate the array
+- `data_fetcher_label`: [optional] a string representing the label of the attached `datafetcher` [see below]
+- `cache`: [optional] a boolean. True if the original value should be cached (useful for intensive requests e.g. from `datafetcher`s)
+- `fetch`: [optional] instructions on when in the runtime to fetch the array (coming soon)
 
-In the first scenario, `foo -> bar` has order 0, and `foo -> baz` has order 1. This means:
-- `foo` will transmit 50% of its balance to `bar` (5)
-- `foo` subtracts 5 from its balance
-- `foo` will then transmit 50% of its remaining balance to `baz` (2.5)
-- `foo` subtracts 2.5 from its balance
-- the balance in `foo` is 2.5, the balance in `bar` is 5, and the balance in `baz` is 2.5
+#### Flush [optional]
+A boolean representing whether, at the the end of each timepoint (e.g. one year), the balance of the nodes should be reset to 0s ([[0, 0, 0...], [...0]]).
+This can be useful if the node is not a state, but a collection or constant of some sort.
 
-In the second scenario, `foo -> bar` and `foo -> baz` have order 0. This means:
-- `foo` keeps track of its balance before it transmits anything
-- `foo` will transmit 50% of that balance to `bar` (5)
-- `foo` will transmit to% of that balance to `baz` (5)
-- `foo` subtracts that balance from itself
-- the balance in `foo` is 0, the balance in `bar` is 5, and the balance in `baz` is 5
+#### Age [optional]
+A boolean representing whether, when triggered, the balance of the nodes should be "aged".
+Here, this means the values of each element in an array are shifted by 1 index.
+Therefore, the first array will contain 0, and the final array will be removed.
+This simulated ageing: males aged 1 will now be aged 2, females aged 50 will now be aged 51 etc.
+This also implies anyone aged 100 will be removed from the array.
 
-Therefore, batches for links are more complicated, but important to understand. One is more suitable if a user is thinking about rates. One is more suitable if a user is trying to divide a node in the traditional sense.
+### Link Properties
+Nodes and links are a collection of properties which forms the model structure. 
+For our purposes, we will deal with nodes and links collectively when we can, and call them `components`.
 
+#### ID [required]
+Components have an ID. An ID should be unique. We choose to use `ULID`. 
 
-#### Source and Target [links only, required]
+#### Label [optional]
+Nodes have a plain-text, human-readable label.
+
+#### Source and Target [required]
 Links require two properties: `source` and `target`.
 These are the ID of the source node, and the ID of the target node respectively.
 
@@ -116,7 +122,6 @@ If specified, may change the behaviour of the node or edge.
 For example, the `surrogate` subtype of nodes provides different behaviours (discussed below).
 
 #### Generate Array [optional]
-Nodes can generate arrays to store in their `balance`. 
 Links can generate arrays to create their `transition rate`.
 This property is a dictionary with the following features:
 - `method`: a string which matches the name of the method to generate the array
@@ -124,17 +129,6 @@ This property is a dictionary with the following features:
 - `data_fetcher_label`: [optional] a string representing the label of the attached `datafetcher` [see below]
 - `cache`: [optional] a boolean. True if the original value should be cached (useful for intensive requests e.g. from `datafetcher`s)
 - `fetch`: [optional] instructions on when in the runtime to fetch the array (coming soon)
-
-#### Flush [nodes only, optional]
-A boolean representing whether, at the the end of each timepoint (e.g. one year), the balance of the nodes should be reset to 0s ([[0, 0, 0...], [...0]]).
-This can be useful if the node is not a state, but a collection or constant of some sort.
-
-#### Age [nodes only, optional]
-A boolean representing whether, when triggered, the balance of the nodes should be "aged".
-Here, this means the values of each element in an array are shifted by 1 index.
-Therefore, the first array will contain 0, and the final array will be removed.
-This simulated ageing: males aged 1 will now be aged 2, females aged 50 will now be aged 51 etc.
-This also implies anyone aged 100 will be removed from the array.
 
 ### Runtime
 #### start and end [optional]
@@ -162,18 +156,18 @@ For example:
 ```
 
 
-### Subloops
+### subroutines
 The order of operations in a model is important.
-Subloops allow users to specify when things happen within runtime.
+subroutines allow users to specify when things happen within runtime.
 For example, each year you may wish for ageing to occur first, then births, then deaths etc.
-These are behaviours which can be ordered using subloops.
+These are behaviours which can be ordered using subroutines.
 
-Subloops are a list of dictionaries, with each dictionary providing information about the behaviour to occur. 
+subroutines are a list of dictionaries, with each dictionary providing information about the behaviour to occur. 
 Importantly, the list will run from top to bottom, so the order matters.
 
-The properties of subloops are as follows
+The properties of subroutines are as follows
 ```
-subloops = [
+subroutines = [
   {
     "method": "age",
     "narration": "Age the population",
@@ -187,7 +181,7 @@ subloops = [
 ```
 `method` is a string, corresponding to a property or method that a node can execute e.g. "age", "flush", "generate_balance".
 `narration` is a string which will be written to the `observation file` for each `Event` that occurs during the subloop.
-This is useful to distinguish between subloops when debugging or reading logs.
+This is useful to distinguish between subroutines when debugging or reading logs.
 `all_nodes` is a boolean which, if True, will attempt to run the `method` on every node, regardless of whether or not it has an `order`.
 `nodes_to_include` is a list of IDs of nodes to apply the `method` to. 
 `nodes_to_exclude` is a list of IDs of nodes to avoid applying the `method` to.
@@ -214,11 +208,11 @@ A user can attach the `observation file` to the environment (discussed below).
 
 ## Specification: The Botech Graph and Graph Components
 
-The `environment`, when passed a model configuration, will create a `graph` and the components of the graph: `nodes` and `edges`. This is the process of translating the nodes and links of the `configuration` into objects (or methods, depending on the implementation) that can:
+The `environment`, when passed a model configuration, will create a `graph` and the components of the graph: `nodes` and `links`. This is the process of translating the nodes and links of the `configuration` into objects (or methods, depending on the implementation) that can:
 - maintain state
 - adjust their balance (nodes)
-- transmit values (edges)
-- generate arrays (nodes and edges)
+- transmit values (links)
+- generate arrays (nodes and links)
 
 
 ## Specification: The Simulation Method and Runtime Events
@@ -228,7 +222,7 @@ The `simulate` method is triggered from the `environment` and propagated to the 
 def _simulation_loop(self):
     while not self._environment.counter_is_max():
 
-        for subloop in self._subloops:
+        for subloop in self._subroutines:
 
             nodes_to_include = self.determine_nodes_to_include(subloop)
             method_name = subloop.get("method")
@@ -245,7 +239,7 @@ def _simulation_loop(self):
 ```
 Here are the important points about the `simulation` method:
 - It runs from the start time to the end time (including the end time)
-- It iterates through the subloops which were configured in the `model configuration`
+- It iterates through the subroutines which were configured in the `model configuration`
 - It determines which nodes should be included
 - It fetches the appropriate method, based on the method specified in the subloop label
 - It performs that method on each node
@@ -280,7 +274,7 @@ The record has the following features (although we plan to make this configurabl
 In the overview, we mentioned that botech is a superset of traditional state-transition models. By this, we mean *state-transition models pass values between states, and our models can do more than this*. The following features are considered additional to that traditional functionality.
 
 ### On-Graph Calculations 
-Rather than pass values between states, edges can use the value of a source node to inform them about how to interact with a target node.
+Rather than pass values between states, links can use the value of a source node to inform them about how to interact with a target node.
 
 Consider the following example: two nodes, `foo` and `bar`, connected by edge `foo -> bar`. `foo` has value 0.5, `bar` has value 10, `foo -> bar` has transition rate 1.
 
@@ -295,14 +289,14 @@ This means that the value of 0.5 from `foo` is multiplied against `bar`'s value 
 
 This means users can perform *on-graph calculations*, which can be useful to make calculations explicit, rather than occurring before the model has been created. It also means users can model dynamic processes that modify eachother.
 
-### Surrogates (Nodes which are edges)
+### Surrogates (Nodes which are links)
 Surrogates defined very simply are *nodes which change the transition rates around them*. This can be unintuitive, and let us provide some context first. 
 
 Imagine the following graph with nodes `foo`, `bar` and edge `foo -> bar`. `foo` has value 10, `bar` has value `5`. `foo -> bar` has the crypic value of 0.1234598798, some complicated number, and it is not immediately clear where this value came from. It turns out, that 0.1234598798 is the resulting value from a series of calculations made in an excel spreadsheet which, the whereabouts of which have gone missing. Now we are left with a value, and not much explanation of what it means! 
 
 This example highlights what `surrogate` nodes intend to resolve: **Transition rates can represent a simplification of a complex process.**
 
-One solution to this is to utilise the on-graph calculations we explained previously. However, we are presented with the issue that `values` are a property of nodes, and these values are transmitted through edges by rates. Surrogates allow us to pretend a node is an edge, by affecting the edge coming into it, and the edge going out of it.
+One solution to this is to utilise the on-graph calculations we explained previously. However, we are presented with the issue that `values` are a property of nodes, and these values are transmitted through links by rates. Surrogates allow us to pretend a node is an edge, by affecting the edge coming into it, and the edge going out of it.
 
 Here's an example.
 
@@ -335,7 +329,7 @@ This can be used to create complex behaviours, or simplify behaviours. For examp
 
 
 ## Getting Data (Datafetchers and DataSources)
-By default, data is not "input" into nodes as balances, or into edges as transition rates. 
+By default, data is not "input" into nodes as balances, or into links as transition rates. 
 Rather, data is returned from a `datafetcher`.
 A datafetcher is an API, which accepts a `method` and some `parameters` relating to that method and returns a value in the form of an 2x101 array.
 Datafetchers are also able to retrieve information from the `environment` such as the current time period, and metadata.
